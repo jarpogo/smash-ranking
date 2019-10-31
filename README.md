@@ -4,4 +4,4 @@ This repository is focused on building a solution for the Smash Ultimate communi
 
 With a refined ranking system, seeding can easily be produced given a tournaments attendees.  
 
-THe purpose is to automate this process starting from a small proof-of-concept and iterating to increase functionality and the ranking algortithm criteria itself.
+The purpose is to automate this process starting from a small proof-of-concept and iterating to increase functionality and the ranking algortithm criteria itself.
