@@ -1,6 +1,6 @@
 import requests
 
-def executeApi( query, variables, api_token ) :
+def execute_api ( query, variables, api_token ) :
     """
     """
 

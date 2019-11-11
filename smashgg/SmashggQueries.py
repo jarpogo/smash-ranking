@@ -1,11 +1,11 @@
-import smashgg_api  
+import SmashggAPI
 
-def getEventID( slug, token ) :
+def get_event_id ( slug, token ) :
     """
-    Return the EventID for a particular event given a tournaments URL slug
+    Return the eventId for a particular event given a tournaments URL slug
 
     :param slug: the tournament URL slug
-    :returns: the eventID as a string
+    :returns: the eventId as a string
     """
     query = '\
         query TournamentsBySlug($slug: String!) {\
@@ -13,6 +13,11 @@ def getEventID( slug, token ) :
                 id\
                 name\
                 countryCode\
+                addrState\
+                city\
+                venueAddress\
+                venueName\
+                startAt\
                 slug\
                 events {\
                     id\
@@ -30,7 +35,7 @@ def getEventID( slug, token ) :
             "slug":"%s"\
         }' % slug
 
-    data = smashgg_api.executeApi(query, variables, token)
+    data = SmashggAPI.execute_api(query, variables, token)
     res = 'null'
 
     if 'errorId' in data:
@@ -38,6 +43,9 @@ def getEventID( slug, token ) :
 
     if data['data']['tournament'] == None:
         raise LookupError("Tournament doesn't exist with slug: %s" % slug)
+
+    if data['data']['tournament']['events'] == None:
+        raise LookupError("Event doesn't exist with slug: %s" % slug)
 
     # Search the results for the desired event (in this case, hardcoded to 'Ultimate Singles'
     for i in range (0, len (data['data']['tournament']['events'])):
@@ -48,17 +56,47 @@ def getEventID( slug, token ) :
     return res
 
 
-def getEventStandings( eventID, token ) :
+def get_event_attendee_count ( slug, eventId, token ) :
+
+    query = '\
+        query AttendeeCount($tourneySlug: String!, $eventIds: [ID]) {\
+            tournament(slug: $tourneySlug) {\
+                name\
+                participants(query: {\
+                    filter: {\
+                        eventIds:$eventIds\
+                    }\
+                }) {\
+                    pageInfo {\
+                        total\
+                    }\
+                }\
+            }\
+        }'
+
+    variables = '\
+        {\
+            "tourneySlug": "%s",\
+            "eventId": [%s]\
+        }' % ( slug, eventId )
+
+    res = SmashggAPI.execute_api(query, variables, token)
+
+    return res['data']['tournament']['participants']['pageInfo']['total']
+
+
+def get_event_standings ( eventId, token ) :
     """
     Return the participant standings for a particular event
 
-    :param eventID: the ID for a particular event
+    :param eventId: the ID for a particular event
     :returns: JSON data consisting of the participant standings
     """
     query = '\
         query EventStandings($eventId: ID!, $page: Int!, $perPage: Int!) {\
             event(id: $eventId) {\
                 name\
+                startAt\
                 standings(query: {\
                     perPage: $perPage,\
                     page: $page\
@@ -79,8 +117,8 @@ def getEventStandings( eventID, token ) :
             "eventId": %s,\
             "page": 1,\
             "perPage": 30\
-        }' % eventID
+        }' % eventId
 
-    res = smashgg_api.executeApi(query, variables, token)
+    res = SmashggAPI.execute_api(query, variables, token)
     
     return res['data']['event']['standings']
